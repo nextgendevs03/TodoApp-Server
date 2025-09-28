@@ -23,13 +23,23 @@ app.use(cors({
 
 app.use(express.json()); // Parse JSON bodies
 
-// Connect to MongoDB
+// Connect to MongoDB with better error handling and timeout configuration
 mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/todoapp', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 15000, // Increase timeout to 15 seconds
+  connectTimeoutMS: 15000, // Connection timeout
+  socketTimeoutMS: 45000, // Socket timeout
+  bufferCommands: false, // Disable mongoose buffering
+  bufferMaxEntries: 0, // Disable mongoose buffering
+  maxPoolSize: 10, // Maintain up to 10 socket connections
+  maxIdleTimeMS: 30000, // Close connections after 30 seconds of inactivity
 })
-.then(() => console.log('Connected to MongoDB'))
-.catch(err => console.error('MongoDB connection error:', err));
+.then(() => console.log('✅ Connected to MongoDB'))
+.catch(err => {
+  console.error('❌ MongoDB connection error:', err);
+  console.error('Please check your MONGO_URI and network connectivity');
+});
 
 // Routes
 app.use('/api/auth', authRoutes); // Authentication routes
