@@ -20,14 +20,7 @@ const authenticateToken = async (req, res, next) => {
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
     
-    // Check database connection status
-    const mongoose = require('mongoose');
-    if (mongoose.connection.readyState !== 1) {
-      return res.status(503).json({ 
-        success: false, 
-        message: 'Database connection not ready. Please try again.' 
-      });
-    }
+    // Database connection is handled by global middleware
     
     // Find user by ID from token
     const user = await User.findById(decoded.userId).select('-password');
