@@ -20,8 +20,17 @@ const authenticateToken = async (req, res, next) => {
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
     
-    // Find user by ID from token with timeout handling
-    const user = await User.findById(decoded.userId).select('-password').maxTimeMS(10000);
+    // Check database connection status
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ 
+        success: false, 
+        message: 'Database connection not ready. Please try again.' 
+      });
+    }
+    
+    // Find user by ID from token
+    const user = await User.findById(decoded.userId).select('-password');
     if (!user) {
       return res.status(401).json({ 
         success: false, 
@@ -36,8 +45,8 @@ const authenticateToken = async (req, res, next) => {
   } catch (error) {
     console.error('Auth middleware error:', error);
     
-    // Handle specific MongoDB timeout errors
-    if (error.name === 'MongooseError' || error.message.includes('buffering timed out')) {
+    // Handle specific MongoDB errors
+    if (error.name === 'MongooseError' || error.message.includes('buffering timed out') || error.message.includes('before initial connection')) {
       return res.status(503).json({ 
         success: false, 
         message: 'Database connection error. Please try again.' 

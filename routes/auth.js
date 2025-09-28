@@ -28,6 +28,15 @@ router.post('/register', async (req, res) => {
       });
     }
     
+    // Check database connection
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({
+        success: false,
+        message: 'Database connection not ready. Please try again in a moment.'
+      });
+    }
+    
     // Check if user already exists
     const existingUser = await User.findOne({ 
       $or: [{ email }, { phone }] 
@@ -62,6 +71,15 @@ router.post('/register', async (req, res) => {
     
   } catch (error) {
     console.error('Register error:', error);
+    
+    // Handle specific MongoDB errors
+    if (error.name === 'MongooseError' || error.message.includes('before initial connection') || error.message.includes('buffering timed out')) {
+      return res.status(503).json({
+        success: false,
+        message: 'Database connection error. Please try again in a moment.'
+      });
+    }
+    
     res.status(500).json({
       success: false,
       message: 'Server error during registration'
@@ -79,6 +97,15 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({
         success: false,
         message: 'Please provide phone number and password'
+      });
+    }
+    
+    // Check database connection
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({
+        success: false,
+        message: 'Database connection not ready. Please try again in a moment.'
       });
     }
     
@@ -118,6 +145,15 @@ router.post('/login', async (req, res) => {
     
   } catch (error) {
     console.error('Login error:', error);
+    
+    // Handle specific MongoDB errors
+    if (error.name === 'MongooseError' || error.message.includes('before initial connection') || error.message.includes('buffering timed out')) {
+      return res.status(503).json({
+        success: false,
+        message: 'Database connection error. Please try again in a moment.'
+      });
+    }
+    
     res.status(500).json({
       success: false,
       message: 'Server error during login'
